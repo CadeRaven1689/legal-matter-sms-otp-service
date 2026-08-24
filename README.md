@@ -10,7 +10,7 @@ The demo asks for a one-time code. Run it a second time with `DEMO_CODE=123456` 
 
 ## Run the login boundary
 
-Infrai puts both SMS operations behind one API and a single `INFRAI_API_KEY`; this repo just uses plain HTTP, so the service has no provider SDK in it.
+Infrai puts both SMS steps behind one API and a single `INFRAI_API_KEY`; this repo just does plain HTTP, so the service has no provider SDK to wrangle.
 
 ```bash
 export INFRAI_API_KEY=your_key
@@ -27,13 +27,13 @@ Expected response:
 {"status":"code_sent","matterId":"MAT-2048","workflow":"matter_intake"}
 ```
 
-Then send the received code to `/login/verify` with the same fields plus `"code":"123456"`. A verified intake returns `open_intake_questionnaire`; signed document delivery returns `release_signed_document`; deadline follow-up returns `show_deadline_checklist`.
+Then post the received code to `/login/verify` with the same fields plus `"code":"123456"`. A verified intake returns `open_intake_questionnaire`; signed document delivery returns `release_signed_document`; deadline follow-up returns `show_deadline_checklist`.
 
 ## Reliability boundary
 
 `src/infrai_sms.ts` sets an explicit POST method, decodes the `{ok, data, error, metadata}` envelope before classifying the HTTP status, and surfaces business rejections to the local server as client responses. A 429 response observes `Retry-After` when present and otherwise uses bounded exponential backoff. Both writes carry a stable key derived from the matter, phone, workflow, and operation.
 
-The service takes E.164 phone numbers and zod-validates every request body. It keeps no login session and stores no matter data; the returned action is where your app's auth and persistence take over.
+The service takes E.164 phone numbers and zod-validates every request body. It holds no login session and stores no matter data; the returned action is where your app's auth and persistence take over.
 
 ## Deterministic check
 
